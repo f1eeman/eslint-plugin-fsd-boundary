@@ -6,9 +6,9 @@ It ships three focused rules that keep imports honest in an FSD codebase:
 
 | Rule | What it enforces | Autofix |
 | --- | --- | --- |
-| [`public-api`](#public-api) | Slices may only be imported through their Public API; `shared`/`app` imports must target a segment | ✅ |
-| [`layer-imports`](#layer-imports) | A layer may only import lower layers; one slice may not import a sibling slice of the same layer | — |
-| [`relative-path`](#relative-path) | Imports inside a module must be relative; imports into another module must be absolute | ✅ (both directions) |
+| [`public-api`](./docs/rules/public-api.md) | Slices may only be imported through their Public API; `shared`/`app` imports must target a segment | ✅ |
+| [`layer-imports`](./docs/rules/layer-imports.md) | A layer may only import lower layers; one slice may not import a sibling slice of the same layer | — |
+| [`relative-path`](./docs/rules/relative-path.md) | Imports inside a module must be relative; imports into another module must be absolute | ✅ (both directions) |
 
 ## The FSD layers
 
@@ -83,6 +83,8 @@ Imports whose first segment is not an FSD layer (e.g. `react`, `@scope/pkg`) are
 
 ### `public-api`
 
+📖 [Full documentation](./docs/rules/public-api.md)
+
 Forbids reaching past a slice's Public API.
 
 ```ts
@@ -103,6 +105,8 @@ Imports that point inside the **current** file's own module are left to `relativ
 
 ### `layer-imports`
 
+📖 [Full documentation](./docs/rules/layer-imports.md)
+
 Two checks, both skipping `type`-only imports (`import type …` and inline `import { type Foo }`):
 
 ```ts
@@ -119,6 +123,8 @@ Cross-slice is only checked for sliced layers; cross-segment imports inside `sha
 **Options:** `{ alias?: string }`.
 
 ### `relative-path`
+
+📖 [Full documentation](./docs/rules/relative-path.md)
 
 Keeps import style consistent with module boundaries.
 
