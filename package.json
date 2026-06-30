@@ -24,9 +24,11 @@
     "url": "https://github.com/f1eeman/eslint-plugin-fsd-boundaries/issues"
   },
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
@@ -35,6 +37,7 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm --dts --clean",
+    "prepublishOnly": "yarn build",
     "test": "vitest run",
     "test:watch": "vitest"
   },
