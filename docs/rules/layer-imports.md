@@ -45,15 +45,23 @@ import { cn } from "@/shared/lib"; // cross-segment inside shared — allowed
 
 ```ts
 type Options = {
-  alias?: string; // default: "@"
+  alias?: string;        // default: "@"
+  exceptions?: string[]; // default: []
 };
 ```
 
 - **`alias`** — the absolute-import alias. Defaults to `"@"`. Set to your own alias, or to `""` for bare layer-rooted imports.
+- **`exceptions`** — a list of layer-rooted path prefixes that are allowed to bypass **both** checks. Matching is prefix-based (`startsWith`) against the import's layer-rooted path (without the alias), e.g. `app/providers/StoreProvider`.
 
 ```js
-"fsd-boundaries/layer-imports": ["error", { alias: "@" }]
+"fsd-boundaries/layer-imports": ["error", {
+  alias: "@",
+  // allow importing the store schema/types into lower layers
+  exceptions: ["app/providers/StoreProvider"],
+}]
 ```
+
+A common case: typing thunks/selectors against the global store. If the import is type-only it is already exempt (`import type { StateSchema } from "@/app/providers/StoreProvider"`); add it to `exceptions` only when you need the value import.
 
 ## When Not To Use It
 

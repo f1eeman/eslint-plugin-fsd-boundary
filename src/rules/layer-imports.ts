@@ -10,12 +10,12 @@ import {
   type Layer,
 } from "../lib/fsd.js";
 
-type Options = [{ alias?: string }];
+type Options = [{ alias?: string; exceptions?: string[] }];
 type MessageIds = "layerViolation" | "crossSliceViolation";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) =>
-    `https://github.com/f1eeman/eslint-plugin-fsd-boundaries/blob/main/docs/rules/${name}.md`,
+    `https://github.com/f1eeman/eslint-plugin-fsd-boundary/blob/main/docs/rules/${name}.md`,
 );
 
 export const layerImports = createRule<Options, MessageIds>({
@@ -24,25 +24,28 @@ export const layerImports = createRule<Options, MessageIds>({
     type: "problem",
     docs: {
       description:
-        "Запрет импорта вышележащих слоёв в нижележащие и импорта между слайсами одного слоя",
+        "Forbid importing higher layers into lower layers, and importing one slice into another slice of the same layer",
     },
     schema: [
       {
         type: "object",
-        properties: { alias: { type: "string" } },
+        properties: {
+          alias: { type: "string" },
+          exceptions: { type: "array", items: { type: "string" } },
+        },
         additionalProperties: false,
       },
     ],
     messages: {
       layerViolation:
-        "Нарушение слоёв FSD: нельзя импортировать вышележащий слой '{{ targetLayer }}' в нижележащий '{{ currentLayer }}'.",
+        "FSD layer violation: a lower layer '{{ currentLayer }}' cannot import a higher layer '{{ targetLayer }}'.",
       crossSliceViolation:
-        "Слайс '{{ currentSlice }}' не может импортировать другой слайс '{{ targetSlice }}' того же слоя '{{ layer }}' (кроме type-импортов).",
+        "Cross-slice import is forbidden: slice '{{ currentSlice }}' cannot import another slice '{{ targetSlice }}' of the same layer '{{ layer }}' (type-only imports are allowed).",
     },
   },
-  defaultOptions: [{ alias: "@" }],
+  defaultOptions: [{ alias: "@", exceptions: [] }],
   create: (context) => {
-    const [{ alias = "@" } = {}] = context.options;
+    const [{ alias = "@", exceptions = [] } = {}] = context.options;
     const currentFilePath = context.filename.replace(/\\/g, "/");
     const currentModule = getCurrentModule(currentFilePath);
 
@@ -60,6 +63,13 @@ export const layerImports = createRule<Options, MessageIds>({
           ? resolveRelativeImport(currentFilePath, importPath)
           : parseImportTarget(importPath, alias);
         if (!target) {
+          return;
+        }
+
+        // Exceptions: skip imports whose layer-rooted path matches a prefix
+        // (e.g. "app/providers/StoreProvider").
+        const targetPath = target.segments.join("/");
+        if (exceptions.some((exc) => targetPath.startsWith(exc))) {
           return;
         }
 

@@ -14,7 +14,7 @@ type MessageIds = "shouldBeRelative" | "shouldBeAbsolute";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) =>
-    `https://github.com/f1eeman/eslint-plugin-fsd-boundaries/blob/main/docs/rules/${name}.md`,
+    `https://github.com/f1eeman/eslint-plugin-fsd-boundary/blob/main/docs/rules/${name}.md`,
 );
 
 export const relativePath = createRule<Options, MessageIds>({
@@ -23,7 +23,7 @@ export const relativePath = createRule<Options, MessageIds>({
     type: "problem",
     docs: {
       description:
-        "Импорты внутри своего модуля должны быть относительными, в чужой — абсолютными",
+        "Imports within a module must be relative; imports into another module must be absolute",
     },
     fixable: "code",
     schema: [
@@ -34,10 +34,9 @@ export const relativePath = createRule<Options, MessageIds>({
       },
     ],
     messages: {
-      shouldBeRelative:
-        "Импорт внутри своего модуля должен быть относительным.",
+      shouldBeRelative: "Imports within the same module must be relative.",
       shouldBeAbsolute:
-        "Импорт в чужой модуль должен быть абсолютным (через алиас).",
+        "Imports into another module must be absolute (use the alias).",
     },
   },
   defaultOptions: [{ alias: "@" }],

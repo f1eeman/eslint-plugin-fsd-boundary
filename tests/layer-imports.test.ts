@@ -40,6 +40,18 @@ ruleTester.run("layer-imports", layerImports, {
       code: "import React from 'react';",
       filename: "/proj/src/shared/ui/Button/Button.tsx",
     },
+    // exceptions: разрешённый импорт вышележащего слоя (классический StateSchema)
+    {
+      code: "import { StateSchema } from '@/app/providers/StoreProvider';",
+      filename: "/proj/src/entities/article/model/slice/articleDetailsSlice.ts",
+      options: [{ alias: "@", exceptions: ["app/providers/StoreProvider"] }],
+    },
+    // exceptions: разрешённый cross-slice импорт
+    {
+      code: "import { Bar } from '@/features/bar';",
+      filename: "/proj/src/features/foo/ui/Foo.tsx",
+      options: [{ alias: "@", exceptions: ["features/bar"] }],
+    },
   ],
   invalid: [
     // нижележащий импортирует вышележащий

@@ -11,7 +11,7 @@ type MessageIds = "publicApiViolation" | "sharedSegmentRequired";
 
 const createRule = ESLintUtils.RuleCreator(
   (name) =>
-    `https://github.com/f1eeman/eslint-plugin-fsd-boundaries/blob/main/docs/rules/${name}.md`,
+    `https://github.com/f1eeman/eslint-plugin-fsd-boundary/blob/main/docs/rules/${name}.md`,
 );
 
 export const publicApi = createRule<Options, MessageIds>({
@@ -20,7 +20,7 @@ export const publicApi = createRule<Options, MessageIds>({
     type: "problem",
     docs: {
       description:
-        "Запрет импортов мимо Public API слайса (для shared/app — минимум сегмент)",
+        "Forbid imports bypassing a slice's Public API (for shared/app, require at least a segment)",
     },
     fixable: "code",
     schema: [
@@ -35,9 +35,9 @@ export const publicApi = createRule<Options, MessageIds>({
     ],
     messages: {
       publicApiViolation:
-        "Абсолютные импорты из слайса '{{ slice }}' должны идти только через Public API. Deep-импорты запрещены.",
+        "Absolute imports from slice '{{ slice }}' must go through its Public API. Deep imports are forbidden.",
       sharedSegmentRequired:
-        "Импорт из слоя '{{ layer }}' должен указывать сегмент (например '{{ layer }}/ui'). Импорт голого слоя запрещён.",
+        "Imports from the '{{ layer }}' layer must target a segment (e.g. '{{ layer }}/ui'). Importing the bare layer is forbidden.",
     },
   },
   defaultOptions: [{ alias: "@", exceptions: [] }],

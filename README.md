@@ -120,7 +120,17 @@ import type { Bar } from "@/features/bar"; // ✅ type-only is allowed
 
 Cross-slice is only checked for sliced layers; cross-segment imports inside `shared`/`app` are fine.
 
-**Options:** `{ alias?: string }`.
+**Options:** `{ alias?: string, exceptions?: string[] }`.
+
+`exceptions` is a list of layer-rooted path prefixes allowed to bypass both checks — handy for the classic "type the store in a lower layer" case:
+
+```js
+"fsd-boundaries/layer-imports": ["error", {
+  exceptions: ["app/providers/StoreProvider"],
+}]
+```
+
+(If the import is type-only — `import type { StateSchema } from "@/app/providers/StoreProvider"` — it is already allowed without an exception.)
 
 ### `relative-path`
 

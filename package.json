@@ -15,13 +15,13 @@
     "layers"
   ],
   "author": "f1eeman",
-  "homepage": "https://github.com/f1eeman/eslint-plugin-fsd-boundaries#readme",
+  "homepage": "https://github.com/f1eeman/eslint-plugin-fsd-boundary#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/f1eeman/eslint-plugin-fsd-boundaries.git"
+    "url": "git+https://github.com/f1eeman/eslint-plugin-fsd-boundary.git"
   },
   "bugs": {
-    "url": "https://github.com/f1eeman/eslint-plugin-fsd-boundaries/issues"
+    "url": "https://github.com/f1eeman/eslint-plugin-fsd-boundary/issues"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
