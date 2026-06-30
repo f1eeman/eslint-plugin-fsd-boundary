@@ -36,6 +36,12 @@ ruleTester.run("public-api", publicApi, {
       filename: "/proj/src/pages/home/ui/Home.tsx",
       options: [{ alias: "@", exceptions: ["entities/users/testing"] }],
     },
+    // пустой алиас — публичный API импорт
+    {
+      code: "import { User } from 'entities/users';",
+      filename: "/proj/src/pages/home/ui/Home.tsx",
+      options: [{ alias: "" }],
+    },
   ],
   invalid: [
     // deep-импорт в чужой слайс → автофикс до Public API
@@ -63,6 +69,30 @@ ruleTester.run("public-api", publicApi, {
       code: "import x from '@/app';",
       filename: "/proj/src/pages/home/ui/Home.tsx",
       errors: [{ messageId: "sharedSegmentRequired" }],
+    },
+    // пустой алиас — deep-импорт → автофикс до Public API
+    {
+      code: "import { User } from 'entities/users/model/user';",
+      filename: "/proj/src/pages/home/ui/Home.tsx",
+      options: [{ alias: "" }],
+      output: "import { User } from 'entities/users';",
+      errors: [{ messageId: "publicApiViolation" }],
+    },
+    // кастомный алиас ~ — deep-импорт → автофикс до Public API
+    {
+      code: "import { User } from '~/entities/users/model/user';",
+      filename: "/proj/src/pages/home/ui/Home.tsx",
+      options: [{ alias: "~" }],
+      output: "import { User } from '~/entities/users';",
+      errors: [{ messageId: "publicApiViolation" }],
+    },
+    // негативный тест exceptions: префикс не совпадает — исключение не применяется
+    {
+      code: "import { x } from '@/entities/users/model/x';",
+      filename: "/proj/src/pages/home/ui/Home.tsx",
+      options: [{ alias: "@", exceptions: ["entities/users/testing"] }],
+      output: "import { x } from '@/entities/users';",
+      errors: [{ messageId: "publicApiViolation" }],
     },
   ],
 });

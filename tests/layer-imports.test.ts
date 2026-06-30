@@ -66,5 +66,19 @@ ruleTester.run("layer-imports", layerImports, {
       filename: "/proj/src/features/foo/ui/Foo.tsx",
       errors: [{ messageId: "crossSliceViolation" }],
     },
+    // пустой алиас — нижний слой импортирует верхний
+    {
+      code: "import { Foo } from 'features/foo';",
+      filename: "/proj/src/entities/users/ui/Card.tsx",
+      options: [{ alias: "" }],
+      errors: [{ messageId: "layerViolation" }],
+    },
+    // кастомный алиас ~ — cross-slice в том же слое
+    {
+      code: "import { Bar } from '~/features/bar';",
+      filename: "/proj/src/features/foo/ui/Foo.tsx",
+      options: [{ alias: "~" }],
+      errors: [{ messageId: "crossSliceViolation" }],
+    },
   ],
 });

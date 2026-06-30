@@ -55,5 +55,29 @@ ruleTester.run("relative-path", relativePath, {
       output: "import { cn } from '@/shared/lib/cn';",
       errors: [{ messageId: "shouldBeAbsolute" }],
     },
+    // пустой алиас Direction A: абсолютный в свой модуль → относительный
+    {
+      code: "import { x } from 'features/foo/model/x';",
+      filename: "/proj/src/features/foo/ui/Foo.tsx",
+      options: [{ alias: "" }],
+      output: "import { x } from '../model/x';",
+      errors: [{ messageId: "shouldBeRelative" }],
+    },
+    // пустой алиас Direction B: относительный cross-module → абсолютный без префикса
+    {
+      code: "import { Bar } from '../../bar/ui/Bar';",
+      filename: "/proj/src/features/foo/ui/Foo.tsx",
+      options: [{ alias: "" }],
+      output: "import { Bar } from 'features/bar/ui/Bar';",
+      errors: [{ messageId: "shouldBeAbsolute" }],
+    },
+    // кастомный алиас ~ Direction B: относительный cross-module → абсолютный с префиксом
+    {
+      code: "import { Bar } from '../../bar/ui/Bar';",
+      filename: "/proj/src/features/foo/ui/Foo.tsx",
+      options: [{ alias: "~" }],
+      output: "import { Bar } from '~/features/bar/ui/Bar';",
+      errors: [{ messageId: "shouldBeAbsolute" }],
+    },
   ],
 });
