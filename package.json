@@ -1,0 +1,37 @@
+{
+  "name": "eslint-plugin-fsd-boundaries",
+  "version": "0.0.0",
+  "description": "ESLint plugin for FSD architecture compliance (layers and public API check)",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "eslint-plugin"
+  ],
+  "author": "f1eeman",
+  "main": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean"
+  },
+  "devDependencies": {
+    "@typescript-eslint/utils": "^8.62.1",
+    "eslint": "^9.0.0",
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.15.0"
+  },
+  "license": "MIT"
+}
