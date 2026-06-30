@@ -1,71 +1,140 @@
 # eslint-plugin-fsd-boundaries
 
-ESLint plugin for FSD architecture compliance (layers and public API check)
+> ESLint plugin that enforces [Feature-Sliced Design](https://feature-sliced.design/) import boundaries — with autofixes.
+
+It ships three focused rules that keep imports honest in an FSD codebase:
+
+| Rule | What it enforces | Autofix |
+| --- | --- | --- |
+| [`public-api`](#public-api) | Slices may only be imported through their Public API; `shared`/`app` imports must target a segment | ✅ |
+| [`layer-imports`](#layer-imports) | A layer may only import lower layers; one slice may not import a sibling slice of the same layer | — |
+| [`relative-path`](#relative-path) | Imports inside a module must be relative; imports into another module must be absolute | ✅ (both directions) |
+
+## The FSD layers
+
+Imports are validated against the standard layer hierarchy (low → high):
+
+```
+shared → entities → features → widgets → pages → app
+```
+
+A layer may import from the layers **below** it, never above. `shared` and `app` have no slices — they are organized by segment (`shared/ui`, `shared/lib`, `app/providers`, …).
 
 ## Installation
 
-You'll first need to install [ESLint](https://eslint.org/):
-
 ```sh
-npm i eslint --save-dev
+npm install --save-dev eslint-plugin-fsd-boundaries
+# or
+yarn add -D eslint-plugin-fsd-boundaries
 ```
 
-Next, install `eslint-plugin-fsd-boundaries`:
-
-```sh
-npm install eslint-plugin-fsd-boundaries --save-dev
-```
+Requires ESLint `>=9.15` (flat config).
 
 ## Usage
 
-In your [configuration file](https://eslint.org/docs/latest/use/configure/configuration-files#configuration-file), import the plugin `eslint-plugin-fsd-boundaries` and add `fsd-boundaries` to the `plugins` key:
+### Recommended config
 
 ```js
-import { defineConfig } from "eslint/config";
-import fsd-boundaries from "eslint-plugin-fsd-boundaries";
+// eslint.config.js
+import fsdBoundaries from "eslint-plugin-fsd-boundaries";
 
-export default defineConfig([
-    {
-        plugins: {
-            fsd-boundaries
-        }
-    }
-]);
+export default [
+  fsdBoundaries.configs.recommended,
+];
 ```
 
+This enables all three rules as errors with the default alias `@`.
 
-Then configure the rules you want to use under the `rules` key.
+### Manual config
 
 ```js
-import { defineConfig } from "eslint/config";
-import fsd-boundaries from "eslint-plugin-fsd-boundaries";
+// eslint.config.js
+import fsdBoundaries from "eslint-plugin-fsd-boundaries";
 
-export default defineConfig([
-    {
-        plugins: {
-            fsd-boundaries
-        },
-        rules: {
-            "fsd-boundaries/rule-name": "warn"
-        }
-    }
-]);
+export default [
+  {
+    plugins: { "fsd-boundaries": fsdBoundaries },
+    rules: {
+      "fsd-boundaries/public-api": "error",
+      "fsd-boundaries/layer-imports": "error",
+      "fsd-boundaries/relative-path": ["error", { alias: "@" }],
+    },
+  },
+];
 ```
 
+## Alias configuration
 
+Every rule accepts an `alias` option (default `"@"`) used to recognize absolute FSD imports:
 
-## Configurations
+```js
+"fsd-boundaries/public-api": ["error", { alias: "~" }] // matches "~/entities/users"
+```
 
-<!-- begin auto-generated configs list -->
-TODO: Run eslint-doc-generator to generate the configs list (or delete this section if no configs are offered).
-<!-- end auto-generated configs list -->
+Set `alias` to an **empty string** if your project uses bare layer-rooted imports:
 
+```js
+"fsd-boundaries/public-api": ["error", { alias: "" }] // matches "entities/users"
+```
 
+Imports whose first segment is not an FSD layer (e.g. `react`, `@scope/pkg`) are treated as library imports and ignored.
 
 ## Rules
 
-<!-- begin auto-generated rules list -->
-TODO: Run eslint-doc-generator to generate the rules list.
-<!-- end auto-generated rules list -->
+### `public-api`
 
+Forbids reaching past a slice's Public API.
 
+```ts
+// ❌ deep import bypasses the slice barrel
+import { mapUser } from "@/entities/users/model/mapUser";
+// ✅ autofixed to
+import { mapUser } from "@/entities/users";
+
+// shared / app are segment-based: a segment is required
+import x from "@/shared";          // ❌ bare layer — error (no autofix)
+import { Button } from "@/shared/ui"; // ✅
+import { Button } from "@/shared/ui/Button/Button"; // ✅ deeper is allowed
+```
+
+Imports that point inside the **current** file's own module are left to `relative-path` (no conflict).
+
+**Options:** `{ alias?: string, exceptions?: string[] }`. Paths whose clean form starts with any `exceptions` prefix are skipped (e.g. `exceptions: ["entities/users/testing"]`).
+
+### `layer-imports`
+
+Two checks, both skipping `type`-only imports (`import type …` and inline `import { type Foo }`):
+
+```ts
+// In src/entities/users/ui/Card.tsx:
+import { Foo } from "@/features/foo"; // ❌ entities cannot import the higher layer features
+
+// In src/features/foo/ui/Foo.tsx:
+import { Bar } from "@/features/bar"; // ❌ a feature cannot import a sibling feature (cross-slice)
+import type { Bar } from "@/features/bar"; // ✅ type-only is allowed
+```
+
+Cross-slice is only checked for sliced layers; cross-segment imports inside `shared`/`app` are fine.
+
+**Options:** `{ alias?: string }`.
+
+### `relative-path`
+
+Keeps import style consistent with module boundaries.
+
+```ts
+// In src/features/foo/ui/Foo.tsx (module = features/foo):
+import { x } from "@/features/foo/model/x"; // ❌ same module → must be relative
+import { x } from "../model/x";             // ✅ (autofix target)
+
+import { Bar } from "../../bar/ui/Bar";     // ❌ different module → must be absolute
+import { Bar } from "@/features/bar/ui/Bar"; // ✅ (autofix target)
+```
+
+A "module" is `layer/slice` for sliced layers, and `layer/segment/unit` (e.g. `shared/ui/Card`) for `shared`/`app`. Path math is computed symbolically, so it works identically on Windows and POSIX.
+
+**Options:** `{ alias?: string }`.
+
+## License
+
+MIT
