@@ -1,3 +1,4 @@
+import pkg from "../package.json" with { type: "json" };
 import { publicApi } from "./rules/public-api.js";
 import { layerImports } from "./rules/layer-imports.js";
 import { relativePath } from "./rules/relative-path.js";
@@ -10,8 +11,8 @@ interface EslintPlugin {
 
 const plugin: EslintPlugin = {
   meta: {
-    name: "eslint-plugin-fsd-boundaries",
-    version: "1.0.0",
+    name: pkg.name,
+    version: pkg.version,
   },
   rules: {
     "public-api": publicApi,
