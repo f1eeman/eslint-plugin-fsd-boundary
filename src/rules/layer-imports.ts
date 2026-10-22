@@ -8,9 +8,10 @@ import {
   isSlicelessLayer,
   isTypeOnlyImport,
   type Layer,
+  getAlias,
 } from "../lib/fsd.js";
 
-type Options = [{ alias?: string; exceptions?: string[] }];
+type Options = [{ exceptions?: string[] }];
 type MessageIds = "layerViolation" | "crossSliceViolation";
 
 const createRule = ESLintUtils.RuleCreator(
@@ -26,12 +27,17 @@ export const layerImports = createRule<Options, MessageIds>({
       description:
         "Forbid importing higher layers into lower layers, and importing one slice into another slice of the same layer",
     },
+    defaultOptions: [{ exceptions: [] }],
     schema: [
       {
         type: "object",
         properties: {
-          alias: { type: "string" },
-          exceptions: { type: "array", items: { type: "string" } },
+          exceptions: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Path prefixes (layer-rooted, without the alias) allowed to bypass layer and cross-slice checks.",
+          },
         },
         additionalProperties: false,
       },
@@ -43,9 +49,10 @@ export const layerImports = createRule<Options, MessageIds>({
         "Cross-slice import is forbidden: slice '{{ currentSlice }}' cannot import another slice '{{ targetSlice }}' of the same layer '{{ layer }}' (type-only imports are allowed).",
     },
   },
-  defaultOptions: [{ alias: "@", exceptions: [] }],
+  defaultOptions: [{ exceptions: [] }],
   create: (context) => {
-    const [{ alias = "@", exceptions = [] } = {}] = context.options;
+    const [{ exceptions = [] } = {}] = context.options;
+    const alias = getAlias(context.settings);
     const currentFilePath = context.filename.replace(/\\/g, "/");
     const currentModule = getCurrentModule(currentFilePath);
 

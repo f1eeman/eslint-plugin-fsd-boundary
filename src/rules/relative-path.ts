@@ -7,9 +7,10 @@ import {
   getModuleKey,
   isRelative,
   normalizeAlias,
+  getAlias,
 } from "../lib/fsd.js";
 
-type Options = [{ alias?: string }];
+type Options = [];
 type MessageIds = "shouldBeRelative" | "shouldBeAbsolute";
 
 const createRule = ESLintUtils.RuleCreator(
@@ -26,22 +27,16 @@ export const relativePath = createRule<Options, MessageIds>({
         "Imports within a module must be relative; imports into another module must be absolute",
     },
     fixable: "code",
-    schema: [
-      {
-        type: "object",
-        properties: { alias: { type: "string" } },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
     messages: {
       shouldBeRelative: "Imports within the same module must be relative.",
       shouldBeAbsolute:
         "Imports into another module must be absolute (use the alias).",
     },
   },
-  defaultOptions: [{ alias: "@" }],
+  defaultOptions: [],
   create: (context) => {
-    const [{ alias = "@" } = {}] = context.options;
+    const alias = getAlias(context.settings);
     const currentFilePath = context.filename.replace(/\\/g, "/");
     const currentModule = getCurrentModule(currentFilePath);
 

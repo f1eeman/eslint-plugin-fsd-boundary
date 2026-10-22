@@ -50,19 +50,18 @@ import { mapUser } from "@/entities/users";
 
 ## Options
 
+The absolute-import alias is not a rule option — it is shared by all rules and set once in `settings["fsd-boundaries"].alias` (default `"@"`). See [Alias configuration](../../README.md#alias-configuration).
+
 ```ts
 type Options = {
-  alias?: string;        // default: "@"
   exceptions?: string[]; // default: []
 };
 ```
 
-- **`alias`** — the absolute-import alias. Defaults to `"@"` (matching `@/entities/users`). Set it to your own alias (e.g. `"~"`), or to an empty string `""` if your project uses bare layer-rooted imports (`entities/users`).
 - **`exceptions`** — a list of path prefixes (in clean form, without the alias) that are exempt from the check, e.g. `["entities/users/testing"]`. Matching is prefix-based (`startsWith`).
 
 ```js
 "fsd-boundaries/public-api": ["error", {
-  alias: "@",
   exceptions: ["entities/users/testing"],
 }]
 ```

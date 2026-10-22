@@ -4,9 +4,11 @@ import {
   getCurrentModule,
   getModuleKey,
   isSlicelessLayer,
+  getAlias,
+  normalizeAlias,
 } from "../lib/fsd.js";
 
-type Options = [{ alias?: string; exceptions?: string[] }];
+type Options = [{ exceptions?: string[] }];
 type MessageIds = "publicApiViolation" | "sharedSegmentRequired";
 
 const createRule = ESLintUtils.RuleCreator(
@@ -23,12 +25,17 @@ export const publicApi = createRule<Options, MessageIds>({
         "Forbid imports bypassing a slice's Public API (for shared/app, require at least a segment)",
     },
     fixable: "code",
+    defaultOptions: [{ exceptions: [] }],
     schema: [
       {
         type: "object",
         properties: {
-          alias: { type: "string" },
-          exceptions: { type: "array", items: { type: "string" } },
+          exceptions: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Path prefixes (layer-rooted, without the alias) exempt from the Public API check.",
+          },
         },
         additionalProperties: false,
       },
@@ -40,9 +47,10 @@ export const publicApi = createRule<Options, MessageIds>({
         "Imports from the '{{ layer }}' layer must target a segment (e.g. '{{ layer }}/ui'). Importing the bare layer is forbidden.",
     },
   },
-  defaultOptions: [{ alias: "@", exceptions: [] }],
+  defaultOptions: [{ exceptions: [] }],
   create: (context) => {
-    const [{ alias = "@", exceptions = [] } = {}] = context.options;
+    const [{ exceptions = [] } = {}] = context.options;
+    const alias = getAlias(context.settings);
     const currentFilePath = context.filename.replace(/\\/g, "/");
     const currentModule = getCurrentModule(currentFilePath);
 
@@ -80,7 +88,7 @@ export const publicApi = createRule<Options, MessageIds>({
         // Слайс-слои: deep-импорт (> 2 сегментов) запрещён, автофикс до Public API.
         if (target.segments.length > 2) {
           const quote = node.source.raw[0];
-          const normalizedAlias = alias.replace(/\/+$/, "");
+          const normalizedAlias = normalizeAlias(alias);
           const publicApiPath = normalizedAlias
             ? `${normalizedAlias}/${target.layer}/${target.slice}`
             : `${target.layer}/${target.slice}`;

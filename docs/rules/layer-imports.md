@@ -43,19 +43,18 @@ import { cn } from "@/shared/lib"; // cross-segment inside shared — allowed
 
 ## Options
 
+The absolute-import alias is not a rule option — it is shared by all rules and set once in `settings["fsd-boundaries"].alias` (default `"@"`). See [Alias configuration](../../README.md#alias-configuration).
+
 ```ts
 type Options = {
-  alias?: string;        // default: "@"
   exceptions?: string[]; // default: []
 };
 ```
 
-- **`alias`** — the absolute-import alias. Defaults to `"@"`. Set to your own alias, or to `""` for bare layer-rooted imports.
 - **`exceptions`** — a list of layer-rooted path prefixes that are allowed to bypass **both** checks. Matching is prefix-based (`startsWith`) against the import's layer-rooted path (without the alias), e.g. `app/providers/StoreProvider`.
 
 ```js
 "fsd-boundaries/layer-imports": ["error", {
-  alias: "@",
   // allow importing the store schema/types into lower layers
   exceptions: ["app/providers/StoreProvider"],
 }]

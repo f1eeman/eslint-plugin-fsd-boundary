@@ -59,7 +59,7 @@ ruleTester.run("relative-path", relativePath, {
     {
       code: "import { x } from 'features/foo/model/x';",
       filename: "/proj/src/features/foo/ui/Foo.tsx",
-      options: [{ alias: "" }],
+      settings: { "fsd-boundaries": { alias: "" } },
       output: "import { x } from '../model/x';",
       errors: [{ messageId: "shouldBeRelative" }],
     },
@@ -67,7 +67,7 @@ ruleTester.run("relative-path", relativePath, {
     {
       code: "import { Bar } from '../../bar/ui/Bar';",
       filename: "/proj/src/features/foo/ui/Foo.tsx",
-      options: [{ alias: "" }],
+      settings: { "fsd-boundaries": { alias: "" } },
       output: "import { Bar } from 'features/bar/ui/Bar';",
       errors: [{ messageId: "shouldBeAbsolute" }],
     },
@@ -75,7 +75,7 @@ ruleTester.run("relative-path", relativePath, {
     {
       code: "import { Bar } from '../../bar/ui/Bar';",
       filename: "/proj/src/features/foo/ui/Foo.tsx",
-      options: [{ alias: "~" }],
+      settings: { "fsd-boundaries": { alias: "~" } },
       output: "import { Bar } from '~/features/bar/ui/Bar';",
       errors: [{ messageId: "shouldBeAbsolute" }],
     },

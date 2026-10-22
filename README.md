@@ -57,7 +57,7 @@ export default [
     rules: {
       "fsd-boundaries/public-api": "error",
       "fsd-boundaries/layer-imports": "error",
-      "fsd-boundaries/relative-path": ["error", { alias: "@" }],
+      "fsd-boundaries/relative-path": "error",
     },
   },
 ];
@@ -65,16 +65,25 @@ export default [
 
 ## Alias configuration
 
-Every rule accepts an `alias` option (default `"@"`) used to recognize absolute FSD imports:
+The alias used to recognize and build absolute FSD imports is shared by all rules and set once in `settings` (default `"@"`):
 
 ```js
-"fsd-boundaries/public-api": ["error", { alias: "~" }] // matches "~/entities/users"
+export default [
+  fsdBoundaries.configs.recommended,
+  {
+    settings: {
+      "fsd-boundaries": { alias: "~" }, // matches "~/entities/users"
+    },
+  },
+];
 ```
 
 Set `alias` to an **empty string** if your project uses bare layer-rooted imports:
 
 ```js
-"fsd-boundaries/public-api": ["error", { alias: "" }] // matches "entities/users"
+settings: {
+  "fsd-boundaries": { alias: "" }, // matches "entities/users"
+},
 ```
 
 Imports whose first segment is not an FSD layer (e.g. `react`, `@scope/pkg`) are treated as library imports and ignored.
@@ -101,7 +110,7 @@ import { Button } from "@/shared/ui/Button/Button"; // ✅ deeper is allowed
 
 Imports that point inside the **current** file's own module are left to `relative-path` (no conflict).
 
-**Options:** `{ alias?: string, exceptions?: string[] }`. Paths whose clean form starts with any `exceptions` prefix are skipped (e.g. `exceptions: ["entities/users/testing"]`).
+**Options:** `{ exceptions?: string[] }`. Paths whose clean form starts with any `exceptions` prefix are skipped (e.g. `exceptions: ["entities/users/testing"]`).
 
 ### `layer-imports`
 
@@ -120,7 +129,7 @@ import type { Bar } from "@/features/bar"; // ✅ type-only is allowed
 
 Cross-slice is only checked for sliced layers; cross-segment imports inside `shared`/`app` are fine.
 
-**Options:** `{ alias?: string, exceptions?: string[] }`.
+**Options:** `{ exceptions?: string[] }`.
 
 `exceptions` is a list of layer-rooted path prefixes allowed to bypass both checks — handy for the classic "type the store in a lower layer" case:
 
@@ -149,7 +158,7 @@ import { Bar } from "@/features/bar/ui/Bar"; // ✅ (autofix target)
 
 A "module" is `layer/slice` for sliced layers, and `layer/segment/unit` (e.g. `shared/ui/Card`) for `shared`/`app`. Path math is computed symbolically, so it works identically on Windows and POSIX.
 
-**Options:** `{ alias?: string }`.
+**Options:** none.
 
 ## License
 

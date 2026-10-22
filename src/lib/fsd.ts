@@ -14,6 +14,19 @@ export const SLICELESS_LAYERS = ["shared", "app"] as const;
 
 export type Layer = (typeof LAYERS_ORDER)[number];
 
+export const PLUGIN_SETTINGS_KEY = "fsd-boundaries";
+
+export const DEFAULT_ALIAS = "@";
+
+export const getAlias = (settings: Readonly<Record<string, unknown>>): string => {
+  const pluginSettings = settings[PLUGIN_SETTINGS_KEY];
+  if (typeof pluginSettings !== "object" || pluginSettings === null) {
+    return DEFAULT_ALIAS;
+  }
+  const { alias } = pluginSettings as { alias?: unknown };
+  return typeof alias === "string" ? alias : DEFAULT_ALIAS;
+};
+
 export const normalizeAlias = (alias: string): string =>
   alias.replace(/\/+$/, "");
 

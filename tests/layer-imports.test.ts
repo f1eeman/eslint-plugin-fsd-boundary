@@ -44,13 +44,13 @@ ruleTester.run("layer-imports", layerImports, {
     {
       code: "import { StateSchema } from '@/app/providers/StoreProvider';",
       filename: "/proj/src/entities/article/model/slice/articleDetailsSlice.ts",
-      options: [{ alias: "@", exceptions: ["app/providers/StoreProvider"] }],
+      options: [{ exceptions: ["app/providers/StoreProvider"] }],
     },
     // exceptions: разрешённый cross-slice импорт
     {
       code: "import { Bar } from '@/features/bar';",
       filename: "/proj/src/features/foo/ui/Foo.tsx",
-      options: [{ alias: "@", exceptions: ["features/bar"] }],
+      options: [{ exceptions: ["features/bar"] }],
     },
   ],
   invalid: [
@@ -82,14 +82,14 @@ ruleTester.run("layer-imports", layerImports, {
     {
       code: "import { Foo } from 'features/foo';",
       filename: "/proj/src/entities/users/ui/Card.tsx",
-      options: [{ alias: "" }],
+      settings: { "fsd-boundaries": { alias: "" } },
       errors: [{ messageId: "layerViolation" }],
     },
     // кастомный алиас ~ — cross-slice в том же слое
     {
       code: "import { Bar } from '~/features/bar';",
       filename: "/proj/src/features/foo/ui/Foo.tsx",
-      options: [{ alias: "~" }],
+      settings: { "fsd-boundaries": { alias: "~" } },
       errors: [{ messageId: "crossSliceViolation" }],
     },
   ],

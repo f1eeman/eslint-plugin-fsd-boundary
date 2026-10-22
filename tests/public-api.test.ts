@@ -34,13 +34,13 @@ ruleTester.run("public-api", publicApi, {
     {
       code: "import { store } from '@/entities/users/testing';",
       filename: "/proj/src/pages/home/ui/Home.tsx",
-      options: [{ alias: "@", exceptions: ["entities/users/testing"] }],
+      options: [{ exceptions: ["entities/users/testing"] }],
     },
     // пустой алиас — публичный API импорт
     {
       code: "import { User } from 'entities/users';",
       filename: "/proj/src/pages/home/ui/Home.tsx",
-      options: [{ alias: "" }],
+      settings: { "fsd-boundaries": { alias: "" } },
     },
   ],
   invalid: [
@@ -74,7 +74,7 @@ ruleTester.run("public-api", publicApi, {
     {
       code: "import { User } from 'entities/users/model/user';",
       filename: "/proj/src/pages/home/ui/Home.tsx",
-      options: [{ alias: "" }],
+      settings: { "fsd-boundaries": { alias: "" } },
       output: "import { User } from 'entities/users';",
       errors: [{ messageId: "publicApiViolation" }],
     },
@@ -82,7 +82,7 @@ ruleTester.run("public-api", publicApi, {
     {
       code: "import { User } from '~/entities/users/model/user';",
       filename: "/proj/src/pages/home/ui/Home.tsx",
-      options: [{ alias: "~" }],
+      settings: { "fsd-boundaries": { alias: "~" } },
       output: "import { User } from '~/entities/users';",
       errors: [{ messageId: "publicApiViolation" }],
     },
@@ -90,7 +90,7 @@ ruleTester.run("public-api", publicApi, {
     {
       code: "import { x } from '@/entities/users/model/x';",
       filename: "/proj/src/pages/home/ui/Home.tsx",
-      options: [{ alias: "@", exceptions: ["entities/users/testing"] }],
+      options: [{ exceptions: ["entities/users/testing"] }],
       output: "import { x } from '@/entities/users';",
       errors: [{ messageId: "publicApiViolation" }],
     },

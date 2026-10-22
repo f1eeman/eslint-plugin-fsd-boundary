@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  getAlias,
   normalizeAlias,
   isRelative,
   isLayer,
@@ -9,6 +10,25 @@ import {
   getCurrentModule,
   resolveRelativeImport,
 } from "../src/lib/fsd";
+
+describe("getAlias", () => {
+  it("берёт алиас из settings плагина", () => {
+    expect(getAlias({ "fsd-boundaries": { alias: "~" } })).toBe("~");
+  });
+
+  it("поддерживает пустой алиас", () => {
+    expect(getAlias({ "fsd-boundaries": { alias: "" } })).toBe("");
+  });
+
+  it("возвращает @, если алиас не задан", () => {
+    expect(getAlias({})).toBe("@");
+    expect(getAlias({ "fsd-boundaries": {} })).toBe("@");
+  });
+
+  it("игнорирует алиас не-строку", () => {
+    expect(getAlias({ "fsd-boundaries": { alias: 42 } })).toBe("@");
+  });
+});
 
 describe("normalizeAlias", () => {
   it("срезает хвостовые слеши", () => {

@@ -51,16 +51,12 @@ The original quote style (`'` or `"`) is preserved.
 
 ## Options
 
-```ts
-type Options = {
-  alias?: string; // default: "@"
-};
-```
+This rule has no options.
 
-- **`alias`** — the absolute-import alias used both to recognize and to build absolute paths. Defaults to `"@"`. With an empty string `""`, absolute imports are bare layer-rooted paths (`features/bar/ui/Bar`).
+The alias used both to recognize and to build absolute paths is shared by all rules and set once in `settings["fsd-boundaries"].alias` (default `"@"`). With an empty string `""`, absolute imports are bare layer-rooted paths (`features/bar/ui/Bar`). See [Alias configuration](../../README.md#alias-configuration).
 
 ```js
-"fsd-boundaries/relative-path": ["error", { alias: "@" }]
+"fsd-boundaries/relative-path": "error"
 ```
 
 ## When Not To Use It
