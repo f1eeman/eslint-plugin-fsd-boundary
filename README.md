@@ -88,6 +88,21 @@ settings: {
 
 Imports whose first segment is not an FSD layer (e.g. `react`, `@scope/pkg`) are treated as library imports and ignored.
 
+## What is checked
+
+All rules inspect every statement that points at another module, not only `import`:
+
+```ts
+import { Foo } from "@/features/foo";       // static import
+export { Foo } from "@/features/foo";       // named re-export
+export * from "@/features/foo";             // re-export all
+const m = await import("@/features/foo");   // dynamic import (string literal only)
+```
+
+So a barrel such as `features/foo/index.ts` cannot hide a deep or cross-slice dependency behind `export … from`.
+
+`type`-only statements are treated the same way for imports and re-exports: `import type …`, `export type … from`, `export type * from`, and specifier lists where every item is inline `type` (`export { type Foo } from …`).
+
 ## Rules
 
 ### `public-api`
@@ -107,6 +122,8 @@ import x from "@/shared";          // ❌ bare layer — error (no autofix)
 import { Button } from "@/shared/ui"; // ✅
 import { Button } from "@/shared/ui/Button/Button"; // ✅ deeper is allowed
 ```
+
+Deep dynamic imports (`import("@/entities/users/model/user")`) are reported **without** an autofix: the Public API module exports a different shape, so rewriting the path could break code such as `.then((m) => m.default)`.
 
 Imports that point inside the **current** file's own module are left to `relative-path` (no conflict).
 
@@ -158,9 +175,28 @@ import { Bar } from "../../bar/ui/Bar";     // ❌ different module → must be 
 import { Bar } from "@/features/bar/ui/Bar"; // ✅ (autofix target)
 ```
 
-A "module" is `layer/slice` for sliced layers, and `layer/segment/unit` (e.g. `shared/ui/Card`) for `shared`/`app`. Path math is computed symbolically, so it works identically on Windows and POSIX.
+A "module" is `layer/slice` for sliced layers, and `layer/segment/unit` (e.g. `shared/ui/Card`) for `shared`/`app`. Files that sit directly in a `shared`/`app` segment folder (e.g. `app/store/index.ts`, `app/store/Provider.tsx`) belong to the whole segment, so they import its units relatively:
+
+```ts
+// In src/app/store/index.ts:
+export { StoreProvider } from "./Provider"; // ✅ same segment
+// In src/app/store/Provider.tsx:
+import { setupStore } from "@/app/store/store"; // ❌ → "./store"
+```
+
+Path math is computed symbolically, so it works identically on Windows and POSIX.
 
 **Options:** none.
+
+## Development
+
+```sh
+yarn test        # run rule tests (vitest)
+yarn typecheck   # type-check src and tests
+yarn build       # build dist with tsup
+```
+
+`prepublishOnly` runs `typecheck`, `test` and `build` in that order, so a release cannot be published with failing types or tests.
 
 ## License
 
