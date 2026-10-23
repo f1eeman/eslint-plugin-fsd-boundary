@@ -36,5 +36,12 @@ export default defineConfig([
             "eslint-plugin": eslintPlugin,
         },
         extends: ["eslint-plugin/recommended"],
+    },
+    {
+        name: "typescript/unused-vars-via-tsc",
+        files: ["**/*.ts"],
+        rules: {
+            "no-unused-vars": "off",
+        },
     }
 ]);
