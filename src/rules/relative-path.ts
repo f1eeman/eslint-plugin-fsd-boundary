@@ -1,13 +1,14 @@
 import { posix } from "path";
-import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import { ESLintUtils } from "@typescript-eslint/utils";
 import {
   parseImportTarget,
   resolveRelativeImport,
   getCurrentModule,
-  getModuleKey,
+  isInCurrentModule,
   isRelative,
   normalizeAlias,
   getAlias,
+  createModuleSourceVisitor,
 } from "../lib/fsd.js";
 
 type Options = [];
@@ -40,61 +41,57 @@ export const relativePath = createRule<Options, MessageIds>({
     const currentFilePath = context.filename.replace(/\\/g, "/");
     const currentModule = getCurrentModule(currentFilePath);
 
-    return {
-      ImportDeclaration: (node: TSESTree.ImportDeclaration) => {
-        if (!currentModule) {
-          return;
-        }
-        const importPath = node.source.value;
-        const quote = node.source.raw[0];
+    return createModuleSourceVisitor(({ source }) => {
+      if (!currentModule) {
+        return;
+      }
+      const importPath = source.value;
+      const quote = source.raw[0];
 
-        if (isRelative(importPath)) {
-          // Направление B: относительный импорт, ведущий в ЧУЖОЙ модуль.
-          const target = resolveRelativeImport(currentFilePath, importPath);
-          if (!target) {
-            return;
-          }
-          const targetModuleKey = getModuleKey(target.layer, target.segments);
-          if (targetModuleKey === currentModule.moduleKey) {
-            return; // свой модуль — относительный путь корректен
-          }
-          const normalizedAlias = normalizeAlias(alias);
-          const absolute = normalizedAlias
-            ? `${normalizedAlias}/${target.segments.join("/")}`
-            : target.segments.join("/");
-          context.report({
-            node: node.source,
-            messageId: "shouldBeAbsolute",
-            fix: (fixer) =>
-              fixer.replaceText(node.source, `${quote}${absolute}${quote}`),
-          });
-          return;
-        }
-
-        // Направление A: абсолютный FSD-импорт в СВОЙ модуль.
-        const target = parseImportTarget(importPath, alias);
+      if (isRelative(importPath)) {
+        // Направление B: относительный импорт, ведущий в ЧУЖОЙ модуль.
+        const target = resolveRelativeImport(currentFilePath, importPath);
         if (!target) {
           return;
         }
-        const targetModuleKey = getModuleKey(target.layer, target.segments);
-        if (targetModuleKey !== currentModule.moduleKey) {
-          return; // чужой модуль — абсолютный путь корректен
+        if (isInCurrentModule(currentModule, target.segments)) {
+          return; // свой модуль — относительный путь корректен
         }
-
-        // Считаем относительный путь символически (layer-rooted).
-        const fromDir = currentModule.dirSegments.join("/");
-        const toPath = target.segments.join("/");
-        let relative = posix.relative(fromDir, toPath);
-        if (!relative.startsWith(".")) {
-          relative = `./${relative}`;
-        }
+        const normalizedAlias = normalizeAlias(alias);
+        const absolute = normalizedAlias
+          ? `${normalizedAlias}/${target.segments.join("/")}`
+          : target.segments.join("/");
         context.report({
-          node: node.source,
-          messageId: "shouldBeRelative",
+          node: source,
+          messageId: "shouldBeAbsolute",
           fix: (fixer) =>
-            fixer.replaceText(node.source, `${quote}${relative}${quote}`),
+            fixer.replaceText(source, `${quote}${absolute}${quote}`),
         });
-      },
-    };
+        return;
+      }
+
+      // Направление A: абсолютный FSD-импорт в СВОЙ модуль.
+      const target = parseImportTarget(importPath, alias);
+      if (!target) {
+        return;
+      }
+      if (!isInCurrentModule(currentModule, target.segments)) {
+        return; // чужой модуль — абсолютный путь корректен
+      }
+
+      // Считаем относительный путь символически (layer-rooted).
+      const fromDir = currentModule.dirSegments.join("/");
+      const toPath = target.segments.join("/");
+      let relative = posix.relative(fromDir, toPath);
+      if (!relative.startsWith(".")) {
+        relative = `./${relative}`;
+      }
+      context.report({
+        node: source,
+        messageId: "shouldBeRelative",
+        fix: (fixer) =>
+          fixer.replaceText(source, `${quote}${relative}${quote}`),
+      });
+    });
   },
 });

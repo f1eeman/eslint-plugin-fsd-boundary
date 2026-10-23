@@ -48,6 +48,7 @@ The absolute-import alias is not a rule option — it is shared by all rules and
 ```ts
 type Options = {
   exceptions?: string[]; // default: []
+  forbidForeignReexports?: boolean; // default: false
 };
 ```
 
@@ -61,6 +62,23 @@ type Options = {
 ```
 
 A common case: typing thunks/selectors against the global store. If the import is type-only it is already exempt (`import type { StateSchema } from "@/app/providers/StoreProvider"`); add it to `exceptions` only when you need the value import.
+
+- **`forbidForeignReexports`** — when `true`, a file may not re-export values (`export { … } from`, `export * from`) from another FSD module, even when the layer direction is respected. Such re-exports hide a dependency behind someone else's Public API: consumers think the code belongs to the re-exporting slice.
+
+  Still allowed: re-exports from the file's own module, from npm packages, `type`-only re-exports, and paths listed in `exceptions` (handy for a temporary adapter while moving a slice).
+
+```js
+// "fsd-boundaries/layer-imports": ["error", { forbidForeignReexports: true }]
+
+// In src/widgets/sidebar/index.ts
+export * from "@/features/bar";          // ❌ re-exports another module
+export { Button } from "@/shared/ui";    // ❌ re-exports another module
+export { Sidebar } from "./ui/Sidebar";  // ✅ own module
+export type { Bar } from "@/features/bar"; // ✅ type-only
+
+// In src/shared/lib/index.ts
+export { clsx } from "clsx"; // ✅ npm package
+```
 
 ## When Not To Use It
 

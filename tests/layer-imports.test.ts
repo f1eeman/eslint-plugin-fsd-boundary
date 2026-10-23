@@ -5,6 +5,58 @@ const ruleTester = new RuleTester();
 
 ruleTester.run("layer-imports", layerImports, {
   valid: [
+    {
+      code: "export * from '@/features/bar';",
+      filename: "/proj/src/widgets/sidebar/index.ts",
+    },
+    {
+      code: "export { Sidebar } from './ui/Sidebar';",
+      filename: "/proj/src/widgets/sidebar/index.ts",
+      options: [{ forbidForeignReexports: true }],
+    },
+    {
+      code: "export * from './button';",
+      filename: "/proj/src/shared/ui/index.ts",
+      options: [{ forbidForeignReexports: true }],
+    },
+    {
+      code: "export { clsx } from 'clsx';",
+      filename: "/proj/src/shared/lib/index.ts",
+      options: [{ forbidForeignReexports: true }],
+    },
+    {
+      code: "export type { Bar } from '@/features/bar';",
+      filename: "/proj/src/widgets/sidebar/index.ts",
+      options: [{ forbidForeignReexports: true }],
+    },
+    {
+      code: "import { Bar } from '@/features/bar'; export { Bar };",
+      filename: "/proj/src/widgets/sidebar/index.ts",
+      options: [{ forbidForeignReexports: true }],
+    },
+    {
+      code: "export * from '@/entities/bar';",
+      filename: "/proj/src/features/bar/index.ts",
+      options: [
+        { forbidForeignReexports: true, exceptions: ["entities/bar"] },
+      ],
+    },
+    {
+      code: "export type { Bar } from '@/features/bar';",
+      filename: "/proj/src/features/foo/index.ts",
+    },
+    {
+      code: "export { type Bar } from '@/features/bar';",
+      filename: "/proj/src/features/foo/index.ts",
+    },
+    {
+      code: "export type * from '@/features/bar';",
+      filename: "/proj/src/features/foo/index.ts",
+    },
+    {
+      code: "const m = import('@/entities/users');",
+      filename: "/proj/src/features/foo/ui/Foo.tsx",
+    },
     // нижележащий импортирует ещё ниже — ок
     {
       code: "import { Button } from '@/shared/ui';",
@@ -90,6 +142,56 @@ ruleTester.run("layer-imports", layerImports, {
       code: "import { Bar } from '~/features/bar';",
       filename: "/proj/src/features/foo/ui/Foo.tsx",
       settings: { "fsd-boundaries": { alias: "~" } },
+      errors: [{ messageId: "crossSliceViolation" }],
+    },
+    {
+      code: "export { Foo } from '@/features/foo';",
+      filename: "/proj/src/entities/users/index.ts",
+      errors: [{ messageId: "layerViolation" }],
+    },
+    {
+      code: "export * from '@/features/bar';",
+      filename: "/proj/src/features/foo/index.ts",
+      errors: [{ messageId: "crossSliceViolation" }],
+    },
+    {
+      code: "export { type Bar, makeBar } from '@/features/bar';",
+      filename: "/proj/src/features/foo/index.ts",
+      errors: [{ messageId: "crossSliceViolation" }],
+    },
+    {
+      code: "const m = import('@/features/foo');",
+      filename: "/proj/src/entities/users/ui/Card.tsx",
+      errors: [{ messageId: "layerViolation" }],
+    },
+    {
+      code: "export * from '@/features/bar';",
+      filename: "/proj/src/widgets/sidebar/index.ts",
+      options: [{ forbidForeignReexports: true }],
+      errors: [{ messageId: "foreignReexport" }],
+    },
+    {
+      code: "export { Bar } from '@/features/bar';",
+      filename: "/proj/src/widgets/sidebar/index.ts",
+      options: [{ forbidForeignReexports: true }],
+      errors: [{ messageId: "foreignReexport" }],
+    },
+    {
+      code: "export { Button } from '@/shared/ui';",
+      filename: "/proj/src/features/foo/index.ts",
+      options: [{ forbidForeignReexports: true }],
+      errors: [{ messageId: "foreignReexport" }],
+    },
+    {
+      code: "export * from '../../../entities/users';",
+      filename: "/proj/src/features/foo/model/index.ts",
+      options: [{ forbidForeignReexports: true }],
+      errors: [{ messageId: "foreignReexport" }],
+    },
+    {
+      code: "export * from '@/features/bar';",
+      filename: "/proj/src/features/foo/index.ts",
+      options: [{ forbidForeignReexports: true }],
       errors: [{ messageId: "crossSliceViolation" }],
     },
   ],

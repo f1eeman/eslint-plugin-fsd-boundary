@@ -129,7 +129,7 @@ import type { Bar } from "@/features/bar"; // ✅ type-only is allowed
 
 Cross-slice is only checked for sliced layers; cross-segment imports inside `shared`/`app` are fine.
 
-**Options:** `{ exceptions?: string[] }`.
+**Options:** `{ exceptions?: string[]; forbidForeignReexports?: boolean }`.
 
 `exceptions` is a list of layer-rooted path prefixes allowed to bypass both checks — handy for the classic "type the store in a lower layer" case:
 
@@ -140,6 +140,8 @@ Cross-slice is only checked for sliced layers; cross-segment imports inside `sha
 ```
 
 (If the import is type-only — `import type { StateSchema } from "@/app/providers/StoreProvider"` — it is already allowed without an exception.)
+
+`forbidForeignReexports: true` additionally forbids re-exporting values from another FSD module (`export * from "@/features/bar"` in `widgets/sidebar/index.ts`). Own-module, npm-package, `type`-only and `exceptions` re-exports stay allowed.
 
 ### `relative-path`
 

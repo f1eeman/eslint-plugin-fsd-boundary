@@ -1,5 +1,5 @@
 import { posix } from "path";
-import type { TSESTree } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 
 export const LAYERS_ORDER = [
   "shared",
@@ -53,6 +53,81 @@ export const isTypeOnlyImport = (
   );
 };
 
+export const isTypeOnlyExport = (
+  node: TSESTree.ExportNamedDeclaration | TSESTree.ExportAllDeclaration,
+): boolean => {
+  if (node.exportKind === "type") {
+    return true;
+  }
+  if (node.type === AST_NODE_TYPES.ExportAllDeclaration) {
+    return false;
+  }
+  if (node.specifiers.length === 0) {
+    return false;
+  }
+  return node.specifiers.every((s) => s.exportKind === "type");
+};
+
+export type ModuleSourceNode =
+  | TSESTree.ImportDeclaration
+  | TSESTree.ExportNamedDeclaration
+  | TSESTree.ExportAllDeclaration
+  | TSESTree.ImportExpression;
+
+export interface ModuleSource {
+  node: ModuleSourceNode;
+  source: TSESTree.StringLiteral;
+  typeOnly: boolean;
+  dynamic: boolean;
+}
+
+const isStringLiteral = (
+  node: TSESTree.Node | null,
+): node is TSESTree.StringLiteral =>
+  node !== null &&
+  node.type === AST_NODE_TYPES.Literal &&
+  typeof node.value === "string";
+
+interface ModuleSourceHandler {
+  (moduleSource: ModuleSource): void;
+}
+
+export const createModuleSourceVisitor = (handler: ModuleSourceHandler) => ({
+  ImportDeclaration: (node: TSESTree.ImportDeclaration) => {
+    handler({
+      node,
+      source: node.source,
+      typeOnly: isTypeOnlyImport(node),
+      dynamic: false,
+    });
+  },
+  ExportNamedDeclaration: (node: TSESTree.ExportNamedDeclaration) => {
+    if (!isStringLiteral(node.source)) {
+      return;
+    }
+    handler({
+      node,
+      source: node.source,
+      typeOnly: isTypeOnlyExport(node),
+      dynamic: false,
+    });
+  },
+  ExportAllDeclaration: (node: TSESTree.ExportAllDeclaration) => {
+    handler({
+      node,
+      source: node.source,
+      typeOnly: isTypeOnlyExport(node),
+      dynamic: false,
+    });
+  },
+  ImportExpression: (node: TSESTree.ImportExpression) => {
+    if (!isStringLiteral(node.source)) {
+      return;
+    }
+    handler({ node, source: node.source, typeOnly: false, dynamic: true });
+  },
+});
+
 export interface ImportTarget {
   layer: Layer;
   slice: string | undefined;
@@ -97,6 +172,24 @@ export interface CurrentModule {
   moduleKey: string;
   dirSegments: string[];
 }
+
+export const isInCurrentModule = (
+  currentModule: CurrentModule,
+  targetSegments: string[],
+): boolean => {
+  if (
+    getModuleKey(currentModule.layer, targetSegments) ===
+    currentModule.moduleKey
+  ) {
+    return true;
+  }
+  const { layer, dirSegments } = currentModule;
+  const isSegmentRoot = isSlicelessLayer(layer) && dirSegments.length === 2;
+  return (
+    isSegmentRoot &&
+    dirSegments.every((segment, i) => targetSegments[i] === segment)
+  );
+};
 
 export const getCurrentModule = (filePath: string): CurrentModule | null => {
   const normalized = filePath.replace(/\\/g, "/");

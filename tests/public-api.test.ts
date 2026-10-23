@@ -5,6 +5,14 @@ const ruleTester = new RuleTester();
 
 ruleTester.run("public-api", publicApi, {
   valid: [
+    {
+      code: "export { User } from '@/entities/users';",
+      filename: "/proj/src/pages/home/index.ts",
+    },
+    {
+      code: "const m = import('@/entities/users');",
+      filename: "/proj/src/pages/home/ui/Home.tsx",
+    },
     // импорт через Public API слайса
     {
       code: "import { User } from '@/entities/users';",
@@ -93,6 +101,29 @@ ruleTester.run("public-api", publicApi, {
       options: [{ exceptions: ["entities/users/testing"] }],
       output: "import { x } from '@/entities/users';",
       errors: [{ messageId: "publicApiViolation" }],
+    },
+    {
+      code: "export { User } from '@/entities/users/model/user';",
+      filename: "/proj/src/pages/home/index.ts",
+      output: "export { User } from '@/entities/users';",
+      errors: [{ messageId: "publicApiViolation" }],
+    },
+    {
+      code: "export * from '@/entities/users/model/user';",
+      filename: "/proj/src/pages/home/index.ts",
+      output: "export * from '@/entities/users';",
+      errors: [{ messageId: "publicApiViolation" }],
+    },
+    {
+      code: "const m = import('@/entities/users/model/user');",
+      filename: "/proj/src/pages/home/ui/Home.tsx",
+      output: null,
+      errors: [{ messageId: "publicApiViolation" }],
+    },
+    {
+      code: "export * from '@/shared';",
+      filename: "/proj/src/pages/home/index.ts",
+      errors: [{ messageId: "sharedSegmentRequired" }],
     },
   ],
 });

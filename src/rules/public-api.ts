@@ -1,11 +1,12 @@
-import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import { ESLintUtils } from "@typescript-eslint/utils";
 import {
   parseImportTarget,
   getCurrentModule,
-  getModuleKey,
+  isInCurrentModule,
   isSlicelessLayer,
   getAlias,
   normalizeAlias,
+  createModuleSourceVisitor,
 } from "../lib/fsd.js";
 
 type Options = [{ exceptions?: string[] }];
@@ -54,56 +55,55 @@ export const publicApi = createRule<Options, MessageIds>({
     const currentFilePath = context.filename.replace(/\\/g, "/");
     const currentModule = getCurrentModule(currentFilePath);
 
-    return {
-      ImportDeclaration: (node: TSESTree.ImportDeclaration) => {
-        const importPath = node.source.value;
-        const target = parseImportTarget(importPath, alias);
-        if (!target) {
-          return;
-        }
+    return createModuleSourceVisitor(({ source, dynamic }) => {
+      const importPath = source.value;
+      const target = parseImportTarget(importPath, alias);
+      if (!target) {
+        return;
+      }
 
-        // Внутримодульный импорт — зона relative-path, не трогаем.
-        const targetModuleKey = getModuleKey(target.layer, target.segments);
-        if (currentModule && currentModule.moduleKey === targetModuleKey) {
-          return;
-        }
+      // Внутримодульный импорт — зона relative-path, не трогаем.
+      if (currentModule && isInCurrentModule(currentModule, target.segments)) {
+        return;
+      }
 
-        // Исключения.
-        if (exceptions.some((exc) => target.cleanPath.startsWith(exc))) {
-          return;
-        }
+      // Исключения.
+      if (exceptions.some((exc) => target.cleanPath.startsWith(exc))) {
+        return;
+      }
 
-        // Слои без слайсов: обязателен минимум один сегмент.
-        if (isSlicelessLayer(target.layer)) {
-          if (target.segments.length < 2) {
-            context.report({
-              node: node.source,
-              messageId: "sharedSegmentRequired",
-              data: { layer: target.layer },
-            });
-          }
-          return;
-        }
-
-        // Слайс-слои: deep-импорт (> 2 сегментов) запрещён, автофикс до Public API.
-        if (target.segments.length > 2) {
-          const quote = node.source.raw[0];
-          const normalizedAlias = normalizeAlias(alias);
-          const publicApiPath = normalizedAlias
-            ? `${normalizedAlias}/${target.layer}/${target.slice}`
-            : `${target.layer}/${target.slice}`;
+      // Слои без слайсов: обязателен минимум один сегмент.
+      if (isSlicelessLayer(target.layer)) {
+        if (target.segments.length < 2) {
           context.report({
-            node: node.source,
-            messageId: "publicApiViolation",
-            data: { slice: target.slice },
-            fix: (fixer) =>
-              fixer.replaceText(
-                node.source,
-                `${quote}${publicApiPath}${quote}`,
-              ),
+            node: source,
+            messageId: "sharedSegmentRequired",
+            data: { layer: target.layer },
           });
         }
-      },
-    };
+        return;
+      }
+
+      // Слайс-слои: deep-импорт (> 2 сегментов) запрещён, автофикс до Public API.
+      if (target.segments.length > 2) {
+        const quote = source.raw[0];
+        const normalizedAlias = normalizeAlias(alias);
+        const publicApiPath = normalizedAlias
+          ? `${normalizedAlias}/${target.layer}/${target.slice}`
+          : `${target.layer}/${target.slice}`;
+        context.report({
+          node: source,
+          messageId: "publicApiViolation",
+          data: { slice: target.slice },
+          fix: dynamic
+            ? null
+            : (fixer) =>
+                fixer.replaceText(
+                  source,
+                  `${quote}${publicApiPath}${quote}`,
+                ),
+        });
+      }
+    });
   },
 });
