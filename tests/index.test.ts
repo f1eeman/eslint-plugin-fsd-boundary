@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import plugin from "../src/index";
+import plugin from "../src/index.js";
 import pkg from "../package.json" with { type: "json" };
 
 describe("plugin", () => {

@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { publicApi } from "../src/rules/public-api";
+import { publicApi } from "../src/rules/public-api.js";
 
 const ruleTester = new RuleTester();
 

@@ -9,7 +9,7 @@ import {
   getModuleKey,
   getCurrentModule,
   resolveRelativeImport,
-} from "../src/lib/fsd";
+} from "../src/lib/fsd.js";
 
 describe("getAlias", () => {
   it("берёт алиас из settings плагина", () => {

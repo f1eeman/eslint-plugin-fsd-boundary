@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { layerImports } from "../src/rules/layer-imports";
+import { layerImports } from "../src/rules/layer-imports.js";
 
 const ruleTester = new RuleTester();
 

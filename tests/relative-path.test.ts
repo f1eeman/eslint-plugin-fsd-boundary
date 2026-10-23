@@ -1,5 +1,5 @@
 import { RuleTester } from "@typescript-eslint/rule-tester";
-import { relativePath } from "../src/rules/relative-path";
+import { relativePath } from "../src/rules/relative-path.js";
 
 const ruleTester = new RuleTester();
 
