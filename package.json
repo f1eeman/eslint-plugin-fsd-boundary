@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-fsd-boundaries",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "ESLint plugin that enforces Feature-Sliced Design boundaries: Public API imports, layer direction, and relative-vs-absolute import paths — with autofixes.",
   "keywords": [
     "eslint",
